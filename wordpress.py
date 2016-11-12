@@ -1,3 +1,7 @@
+# This is a *fast* HA Wordpress template. It uses an
+# SQL-on-EC2 instead of RDS for faster deployment and it
+# automatically installs Wordpress using wp-cli.
+
 from troposphere import Base64, GetAtt, Join, Output
 from troposphere import Parameter, Ref, Tags, Template
 
