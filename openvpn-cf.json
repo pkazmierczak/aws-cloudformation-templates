@@ -1,0 +1,159 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "OpenVPN server template",
+    "Mappings": {
+        "AWSRegion2AMI": {
+            "ap-northeast-1": {
+                "AMI": "ami-5ea72b5e"
+            },
+            "ap-southeast-1": {
+                "AMI": "ami-365c5764"
+            },
+            "ap-southeast-2": {
+                "AMI": "ami-831d51b9"
+            },
+            "eu-central-1": {
+                "AMI": "ami-507f7e4d"
+            },
+            "eu-west-1": {
+                "AMI": "ami-03644074"
+            },
+            "sa-east-1": {
+                "AMI": "ami-4fd55f52"
+            },
+            "us-east-1": {
+                "AMI": "ami-5fe36434"
+            },
+            "us-west-1": {
+                "AMI": "ami-8bf40fcf"
+            },
+            "us-west-2": {
+                "AMI": "ami-9fe2f2af"
+            }
+        }
+    },
+    "Parameters": {
+        "InstanceType": {
+            "AllowedValues": [
+                "t2.micro",
+                "t2.medium",
+                "m3.medium",
+                "m3.large",
+                "m3.xlarge",
+                "m3.2xlarge"
+            ],
+            "ConstraintDescription": "must be a valid EC2 instance type.",
+            "Default": "t2.micro",
+            "Description": "Instance type for EC2 instance.",
+            "Type": "String"
+        },
+        "KeyName": {
+            "ConstraintDescription": "must be the name of an existing EC2 KeyPair.",
+            "Default": "openvpn",
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        "Project": {
+            "AllowedPattern": "[\\x20-\\x7E]*",
+            "ConstraintDescription": "can contain only ASCII characters.",
+            "Default": "OpenVPN-server",
+            "Description": "OpenVPN-server",
+            "MaxLength": "255",
+            "MinLength": "1",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "OpenVPNInstance": {
+            "Properties": {
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSRegion2AMI",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "AMI"
+                    ]
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "VPNSecurityGroup"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "EC2-VPN",
+                                    {
+                                        "Ref": "Project"
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "public_hostname=openvpn\n",
+                                "admin_user=openvpn\n",
+                                "admin_pw=openvpn\n",
+                                "reroute_gw=1\n",
+                                "reroute_dns=1\n"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "VPNSecurityGroup": {
+            "Properties": {
+                "GroupDescription": "Enable SSH access to the instance and VPN access via configured port. ",
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": "443",
+                        "IpProtocol": "tcp",
+                        "ToPort": "443"
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": "1194",
+                        "IpProtocol": "udp",
+                        "ToPort": "1194"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "SG-VPN",
+                                    {
+                                        "Ref": "Project"
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        }
+    }
+}

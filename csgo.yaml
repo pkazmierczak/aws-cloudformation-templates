@@ -1,0 +1,121 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CounterStrike Global Offensive linux server template
+Mappings:
+  AWSRegion2AMI:
+    eu-central-1:
+      AMI: ami-26c43149
+    eu-west-1:
+      AMI: ami-ed82e39e
+Parameters:
+  InstanceType:
+    AllowedValues:
+    - t2.nano
+    - t2.micro
+    - t2.medium
+    - c4.large
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: t2.micro
+    Description: Instance type for EC2 instance.
+    Type: String
+  KeyName:
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+    Default: openvpn
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+  Project:
+    AllowedPattern: "[\\x20-\\x7E]*"
+    ConstraintDescription: can contain only ASCII characters.
+    Default: Counter-Strike
+    Description: CounterStrike
+    MaxLength: '255'
+    MinLength: '1'
+    Type: String
+  HostedZone:
+    AllowedPattern: "[\\x20-\\x7E]*"
+    ConstraintDescription: can contain only ASCII characters.
+    Default: example.com.
+    Description: zone name
+    MaxLength: '255'
+    MinLength: '1'
+    Type: String
+  GSLT:
+    AllowedPattern: "[\\x20-\\x7E]*"
+    ConstraintDescription: can contain only ASCII characters.
+    Default: 1111
+    Description: Game Server Login Token
+    MaxLength: '255'
+    MinLength: '1'
+    Type: String
+Resources:
+  Instance:
+    Properties:
+      ImageId: !FindInMap [ AWSRegion2AMI, !Ref "AWS::Region", AMI ]
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SecurityGroups: [!Ref SecurityGroup]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 20  # CSGO is quite big, 12 GB...
+      Tags:
+      - Key: Name
+        Value: !Join [ "-", [EC2-CSGO, !Ref Project] ]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -ex
+          apt-get install lib32gcc1 -y
+          mkdir /Steam && cd /Steam
+          wget https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
+          tar -xvzf steamcmd_linux.tar.gz
+          /Steam/steamcmd.sh +login anonymous +force_install_dir /Steam/csgo-ds +app_update 740 +quit
+          echo "rcon_password \"zweibierbitte\"" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "mp_autoteambalance 0" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "mp_autoteambalance 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
+          echo "mp_randomspawn 1" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "mp_teammates_are_enemies 1" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "bot_quota 0" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
+          echo "mp_randomspawn 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
+          echo "mp_teammates_are_enemies 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
+          echo "bot_quota 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
+          /Steam/csgo-ds/srcds_run -game csgo -console -usercon +game_type 1 +game_mode 0 +mapgroup mg_armsrace +map de_safehouse -nobots +sv_setsteamaccount ${GSLT}
+    Type: AWS::EC2::Instance
+  SecurityGroup:
+    Properties:
+      GroupDescription: 'Enable access to the instance. '
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: '22'
+        IpProtocol: tcp
+        ToPort: '22'
+      - CidrIp: 0.0.0.0/0
+        FromPort: '27015'
+        IpProtocol: tcp
+        ToPort: '27015'
+      - CidrIp: 0.0.0.0/0
+        FromPort: '26900'
+        IpProtocol: udp
+        ToPort: '27030'
+      - CidrIp: 0.0.0.0/0
+        FromPort: '27000'
+        IpProtocol: udp
+        ToPort: '27030'
+      - CidrIp: 0.0.0.0/0
+        FromPort: '4380'
+        IpProtocol: udp
+        ToPort: '4380'
+      Tags:
+      - Key: Name
+        Value: !Join [ "-", [SG-CSGO, !Ref Project] ]
+    Type: AWS::EC2::SecurityGroup
+  MyDNS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Ref HostedZone
+      Comment: CNAME for the server
+      Name: !Join [ ".", [cs, !Ref HostedZone] ]
+      Type: CNAME
+      TTL: 300
+      ResourceRecords: [ !GetAtt Instance.PublicDnsName ]
