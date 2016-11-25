@@ -72,14 +72,16 @@ Resources:
           echo "rcon_password \"zweibierbitte\"" >> /Steam/csgo-ds/csgo/cfg/server.cfg
           echo "mp_autoteambalance 0" >> /Steam/csgo-ds/csgo/cfg/server.cfg
           echo "mp_autoteambalance 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
+          echo "mp_limitteams 0" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "mp_limitteams 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
           echo "mp_randomspawn 1" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "mp_randomspawn 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
           echo "mp_teammates_are_enemies 1" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "mp_teammates_are_enemies 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
           echo "bot_quota 0" >> /Steam/csgo-ds/csgo/cfg/server.cfg
+          echo "bot_quota 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
           echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/server.cfg
           echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
-          echo "mp_randomspawn 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
-          echo "mp_teammates_are_enemies 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
-          echo "bot_quota 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
           /Steam/csgo-ds/srcds_run -game csgo -console -usercon +game_type 1 +game_mode 0 +mapgroup mg_armsrace +map de_safehouse -nobots +sv_setsteamaccount ${GSLT}
     Type: AWS::EC2::Instance
   SecurityGroup:
