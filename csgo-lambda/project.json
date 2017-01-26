@@ -1,0 +1,8 @@
+{
+  "name": "csgo-lambda",
+  "description": "Script fetching the latest template and reprovisioning instances every day. ",
+  "memory": 128,
+  "timeout": 5,
+  "role": "arn:aws:iam::307126548426:role/csgo-lambda_lambda_function",
+  "environment": {}
+}
