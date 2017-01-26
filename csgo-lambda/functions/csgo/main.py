@@ -10,7 +10,7 @@ key = 'piotrkazmierczak'
 gslt = '15F60ECD8DFA7B28C8AD9C4D06135AB8'
 
 
-def lambda_handler(event, context):
+def handle(event, context):
 
     cf = boto3.client('cloudformation', region_name=region)
 
