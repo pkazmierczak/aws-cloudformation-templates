@@ -47,6 +47,14 @@ Parameters:
     MaxLength: '255'
     MinLength: '1'
     Type: String
+  authkey:
+    AllowedPattern: "[\\x20-\\x7E]*"
+    ConstraintDescription: can contain only ASCII characters.
+    Default: 1111
+    Description: Steam auth key
+    MaxLength: '255'
+    MinLength: '1'
+    Type: String
 Resources:
   Instance:
     Properties:
@@ -82,7 +90,7 @@ Resources:
           echo "bot_quota 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
           echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/server.cfg
           echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
-          /Steam/csgo-ds/srcds_run -game csgo -console -usercon -authkey 88B7D5B210E625A2B03379E88A28570E +game_type 1 +game_mode 0 +host_workshop_collection 843890618 +workshop_start_map 175480758 -nobots +sv_setsteamaccount ${GSLT}
+          /Steam/csgo-ds/srcds_run -game csgo -console -usercon -authkey ${authkey} +game_type 1 +game_mode 0 +host_workshop_collection 843890618 +workshop_start_map 175480758 -nobots +sv_setsteamaccount ${GSLT}
     Type: AWS::EC2::Instance
   SecurityGroup:
     Properties:
