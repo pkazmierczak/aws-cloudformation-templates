@@ -91,7 +91,7 @@ Resources:
           echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/server.cfg
           echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
 
-          cp gamemode_armsrace.cfg gamemode_arfun.cfg
+          cp /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
           echo "sv_cheats 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
           echo "weapon_accuracy_nospread 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
           echo "weapon_debug_spread_gap 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
