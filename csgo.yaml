@@ -90,6 +90,19 @@ Resources:
           echo "bot_quota 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
           echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/server.cfg
           echo "mp_solid_teammates 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg
+
+          cp /Steam/csgo-ds/csgo/cfg/gamemode_armsrace.cfg /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "sv_cheats 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "weapon_accuracy_nospread 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "weapon_debug_spread_gap 1" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "weapon_recoil_cooldown 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "weapon_recoil_decay1_exp 99999" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "weapon_recoil_decay2_exp 99999" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "weapon_recoil_decay2_lin 99999" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "weapon_recoil_scale 0" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "weapon_recoil_suppression_shots 500" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+          echo "sv_gravity 300" >> /Steam/csgo-ds/csgo/cfg/gamemode_arfun.cfg
+
           /Steam/csgo-ds/srcds_run -game csgo -console -usercon -authkey ${authkey} +game_type 1 +game_mode 0 +host_workshop_collection 843890618 +workshop_start_map 175480758 -nobots +sv_setsteamaccount ${GSLT}
     Type: AWS::EC2::Instance
   SecurityGroup:
