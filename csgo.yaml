@@ -72,6 +72,7 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -ex
+          apt-get update
           apt-get install lib32gcc1 -y
           mkdir /Steam && cd /Steam
           wget https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
