@@ -84,7 +84,8 @@ Resources:
             - LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 mosh-server
             - git clone https://github.com/syl20bnr/spacemacs /home/piotr/.emacs.d
             - git clone https://github.com/pkazmierczak/configs /home/piotr/configs
-            - chown -R piotr:
+            - git clone --depth=1 https://github.com/Bash-it/bash-it.git /home/piotr/.bash_it
+            - chown -R piotr:piotr
   SecurityGroup:
     Properties:
       GroupDescription: 'Enable access to the instance. '
