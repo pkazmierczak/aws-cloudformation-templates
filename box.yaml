@@ -49,6 +49,13 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #cloud-config
+          write_files:
+            - content: |
+                PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+                LC_ALL=en_US.UTF-8
+                LANG=en_US.UTF-8
+              path: /etc/environment
+
           package_update: true
 
           package_upgrade: true
@@ -66,19 +73,11 @@ Resources:
               sudo: ['ALL=(ALL) NOPASSWD:ALL']
               shell: /bin/bash
               ssh-authorized-keys:
-          
-          write-files:
-            - content: |
-                PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-                LC_ALL=en_US.UTF-8
-                LANG=en_US.UTF-8
-              path: /etc/environment
 
           runcmd:
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
             - sed -i -e '$aAllowUsers piotr' /etc/ssh/sshd_config
-            - restart ssh
-            - mosh-server
+            - LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 mosh-server
   SecurityGroup:
     Properties:
       GroupDescription: 'Enable access to the instance. '
