@@ -62,14 +62,18 @@ Resources:
 
           packages: 
             - docker.io
+            - docker-compose
             - emacs24
-            - mosh
             - git
+            - golang-go
+            - htop
             - mc
+            - mosh
+            - virtualenv
 
           users:
             - name: piotr
-              groups: sudo
+              groups: ['sudo', 'docker']
               sudo: ['ALL=(ALL) NOPASSWD:ALL']
               shell: /bin/bash
               ssh-authorized-keys:
@@ -78,6 +82,9 @@ Resources:
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
             - sed -i -e '$aAllowUsers piotr' /etc/ssh/sshd_config
             - LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 mosh-server
+            - git clone https://github.com/syl20bnr/spacemacs /home/piotr/.emacs.d
+            - git clone https://github.com/pkazmierczak/configs /home/piotr/configs
+            - chown -R piotr:
   SecurityGroup:
     Properties:
       GroupDescription: 'Enable access to the instance. '
