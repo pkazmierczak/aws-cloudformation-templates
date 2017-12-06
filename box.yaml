@@ -32,6 +32,10 @@ Parameters:
     MinLength: '1'
     Type: String
 Resources:
+  EIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: vpc
   Instance:
     Type: AWS::EC2::Instance
     Properties:
@@ -60,7 +64,9 @@ Resources:
 
           package_upgrade: true
 
-          packages: 
+          packages:
+            - build-essential 
+            - cmake
             - docker.io
             - docker-compose
             - emacs24
@@ -69,6 +75,8 @@ Resources:
             - htop
             - mc
             - mosh
+            - python-dev
+            - python3-dev
             - virtualenv
 
           users:
@@ -85,7 +93,13 @@ Resources:
             - git clone https://github.com/syl20bnr/spacemacs /home/piotr/.emacs.d
             - git clone https://github.com/pkazmierczak/configs /home/piotr/configs
             - git clone --depth=1 https://github.com/Bash-it/bash-it.git /home/piotr/.bash_it
-            - chown -R piotr:piotr
+            - touch /home/piotr/.emacs.d/custom.el
+            - chown -R piotr:piotr /home/piotr
+  EIPAssociation:
+    Type: "AWS::EC2::EIPAssociation"
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId
+      InstanceId: !Ref Instance
   SecurityGroup:
     Properties:
       GroupDescription: 'Enable access to the instance. '
