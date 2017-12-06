@@ -1,0 +1,102 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Workstation
+Mappings:
+  AWSRegion2AMI:
+    eu-central-1:
+      AMI: ami-df8406b0
+Parameters:
+  InstanceType:
+    AllowedValues:
+    - t2.nano
+    - t2.micro
+    - t2.medium
+    - c4.large
+    - c4.xlarge
+    - m4.large
+    ConstraintDescription: must be a valid EC2 instance type.
+    Default: t2.micro
+    Description: Instance type for EC2 instance.
+    Type: String
+  KeyName:
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+    Default: box
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+  HostedZone:
+    AllowedPattern: "[\\x20-\\x7E]*"
+    ConstraintDescription: can contain only ASCII characters.
+    Default: example.com.
+    Description: zone name
+    MaxLength: '255'
+    MinLength: '1'
+    Type: String
+Resources:
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [ AWSRegion2AMI, !Ref "AWS::Region", AMI ]
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SecurityGroups: [!Ref SecurityGroup]
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 20  # for them dockerz
+      Tags:
+      - Key: Name
+        Value: !Join [ "-", [EC2, !Ref "AWS::StackName"] ]
+      UserData:
+        Fn::Base64: !Sub |
+          #cloud-config
+          package_update: true
+
+          package_upgrade: true
+
+          packages: 
+            - docker.io
+            - emacs24
+            - mosh
+            - git
+            - mc
+
+          users:
+            - name: piotr
+              groups: sudo
+              sudo: ['ALL=(ALL) NOPASSWD:ALL']
+              shell: /bin/bash
+              ssh-authorized-keys:
+          
+          write-files:
+            - content: |
+                PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
+                LC_ALL=en_US.UTF-8
+                LANG=en_US.UTF-8
+              path: /etc/environment
+
+          runcmd:
+            - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+            - sed -i -e '$aAllowUsers piotr' /etc/ssh/sshd_config
+            - restart ssh
+            - mosh-server
+  SecurityGroup:
+    Properties:
+      GroupDescription: 'Enable access to the instance. '
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: '60000'
+        IpProtocol: udp
+        ToPort: '61000'
+      Tags:
+      - Key: Name
+        Value: !Join [ "-", [SG, !Ref "AWS::StackName"] ]
+    Type: AWS::EC2::SecurityGroup
+  MyDNS:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Ref HostedZone
+      Comment: CNAME for the server
+      Name: !Join [ ".", [!Ref "AWS::StackName", !Ref HostedZone] ]
+      Type: CNAME
+      TTL: 300
+      ResourceRecords: [ !GetAtt Instance.PublicDnsName ]

@@ -50,7 +50,8 @@ InstanceType = t.add_parameter(Parameter(
     ConstraintDescription="must be a valid EC2 instance type.",
     Type="String",
     Description="Instance type for EC2 instance.",
-    AllowedValues=["t2.micro", "t2.medium", "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge"],
+    AllowedValues=["t2.micro", "t2.medium", "m3.medium",
+                   "m3.large", "m3.xlarge", "m3.2xlarge"],
 ))
 
 t.add_mapping("AWSRegion2AMI", OPENVPN_AMI)
@@ -60,7 +61,8 @@ VPNSecurityGroup = t.add_resource(ec2.SecurityGroup(
     SecurityGroupIngress=[
         # By default 22 is locked for security reasons
         # {"ToPort": "22", "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": "22"},
-        {"ToPort": "443", "IpProtocol": "tcp", "CidrIp": "0.0.0.0/0", "FromPort": "443"},
+        {"ToPort": "443", "IpProtocol": "tcp",
+            "CidrIp": "0.0.0.0/0", "FromPort": "443"},
         {"ToPort": "1194", "IpProtocol": "udp", "CidrIp": "0.0.0.0/0", "FromPort": "1194"}],
     GroupDescription="Enable SSH access to the instance and VPN access via configured port. ",
     Tags=Tags(
@@ -80,7 +82,7 @@ OpenVPNInstance = t.add_resource(ec2.Instance(
         "admin_pw=openvpn\n",
         "reroute_gw=1\n",
         "reroute_dns=1\n"
-        ])),
+    ])),
     Tags=Tags(
         Name=Join("-", ["EC2-VPN", Ref(Project)]),
     ),
