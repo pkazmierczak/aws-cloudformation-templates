@@ -69,7 +69,7 @@ Resources:
           
           write-files:
             - content: |
-                PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
+                PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
                 LC_ALL=en_US.UTF-8
                 LANG=en_US.UTF-8
               path: /etc/environment
