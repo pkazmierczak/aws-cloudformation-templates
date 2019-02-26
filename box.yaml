@@ -4,16 +4,15 @@ Description: Workstation
 Mappings:
   AWSRegion2AMI:
     eu-central-1:
-      AMI: ami-df8406b0
+      AMI: ami-0bdf93799014acdc4
 Parameters:
   InstanceType:
     AllowedValues:
     - t2.nano
     - t2.micro
     - t2.medium
-    - c4.large
-    - c4.xlarge
-    - m4.large
+    - c5.xlarge
+    - m5.large
     ConstraintDescription: must be a valid EC2 instance type.
     Default: t2.micro
     Description: Instance type for EC2 instance.
@@ -43,6 +42,8 @@ Resources:
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       SecurityGroups: [!Ref SecurityGroup]
+      IamInstanceProfile:
+        !Ref RootInstanceProfile
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
@@ -65,36 +66,16 @@ Resources:
           package_upgrade: true
 
           packages:
-            - build-essential 
-            - cmake
+            - awscli
             - docker.io
-            - docker-compose
-            - emacs24
             - git
-            - golang-go
             - htop
             - mc
             - mosh
-            - python-dev
-            - python3-dev
-            - virtualenv
-
-          users:
-            - name: piotr
-              groups: ['sudo', 'docker']
-              sudo: ['ALL=(ALL) NOPASSWD:ALL']
-              shell: /bin/bash
-              ssh-authorized-keys:
 
           runcmd:
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
-            - sed -i -e '$aAllowUsers piotr' /etc/ssh/sshd_config
             - LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 mosh-server
-            - git clone https://github.com/syl20bnr/spacemacs /home/piotr/.emacs.d
-            - git clone https://github.com/pkazmierczak/configs /home/piotr/configs
-            - git clone --depth=1 https://github.com/Bash-it/bash-it.git /home/piotr/.bash_it
-            - touch /home/piotr/.emacs.d/custom.el
-            - chown -R piotr:piotr /home/piotr
   EIPAssociation:
     Type: "AWS::EC2::EIPAssociation"
     Properties:
@@ -112,6 +93,37 @@ Resources:
       - Key: Name
         Value: !Join [ "-", [SG, !Ref "AWS::StackName"] ]
     Type: AWS::EC2::SecurityGroup
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+  RolePolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: root
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action: "ecr:*"
+          Resource: "*"
+      Roles:
+      - !Ref RootRole
+  RootInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+      - !Ref RootRole
   MyDNS:
     Type: AWS::Route53::RecordSet
     Properties:
