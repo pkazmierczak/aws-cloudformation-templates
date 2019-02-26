@@ -77,7 +77,6 @@ Resources:
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
             - LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 mosh-server
             - usermod -a -G docker ubuntu
-            - $(aws ecr get-login --no-include-email --region eu-central-1)
   EIPAssociation:
     Type: "AWS::EC2::EIPAssociation"
     Properties:
