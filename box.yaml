@@ -93,7 +93,7 @@ Resources:
       - Key: Name
         Value: !Join [ "-", [SG, !Ref "AWS::StackName"] ]
     Type: AWS::EC2::SecurityGroup
-  Role:
+  RootRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
