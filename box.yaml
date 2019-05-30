@@ -25,10 +25,14 @@ Parameters:
   HostedZone:
     AllowedPattern: "[\\x20-\\x7E]*"
     ConstraintDescription: can contain only ASCII characters.
-    Default: example.com.
+    Default: piotr.is.
     Description: zone name
     MaxLength: '255'
     MinLength: '1'
+    Type: String
+  IP:
+    ConstraintDescription: must be an IP address
+    Description: IP address to which the SG will be open (SSH/Mosh)
     Type: String
 Resources:
   EIP:
@@ -42,8 +46,6 @@ Resources:
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       SecurityGroups: [!Ref SecurityGroup]
-      IamInstanceProfile:
-        !Ref RootInstanceProfile
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
           Ebs:
@@ -56,9 +58,10 @@ Resources:
           #cloud-config
           write_files:
             - content: |
-                PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+                PATH="/home/ubuntu/.local/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
                 LC_ALL=en_US.UTF-8
                 LANG=en_US.UTF-8
+                DEBIAN_FRONTEND=noninteractive
               path: /etc/environment
 
           package_update: true
@@ -67,16 +70,52 @@ Resources:
 
           packages:
             - awscli
-            - docker.io
+            - build-essential
+            - curl
             - git
+            # - haskell-stack
             - htop
             - mc
             - mosh
+            - openssh-server
+            - python
+            - python-pip
+            - python-setuptools
+            - python-wheel
+            - python3
+            - python3-pip
+            - python3-setuptools
+            - python3-wheel
+            - silversearcher-ag
+            - software-properties-common
+            - tmux
+            - tzdata
+            - wget
+            - zsh
 
           runcmd:
             - sed -i -e '/^PermitRootLogin/s/^.*$/PermitRootLogin no/' /etc/ssh/sshd_config
+            # - usermod -a -G docker ubuntu
+            # - curl -L https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1.0-linux-x86_64.tar.gz | tar -zxv
+            # - ln -s /home/ubuntu/julia-1.1.0/bin/julia /usr/local/bin/julia
+            - ln -fs /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime
+            - dpkg-reconfigure -f noninteractive tzdata
+            - curl -L https://github.com/neovim/neovim/releases/download/v0.3.7/nvim.appimage -o /usr/bin/nvim
+            - pip2 install neovim
+            - pip3 install neovim
+            - git clone https://github.com/robbyrussell/oh-my-zsh.git /home/ubuntu/.oh-my-zsh
+            - cp /home/ubuntu/.oh-my-zsh/templates/zshrc.zsh-template /home/ubuntu/.zshrc
+            - usermod -s /bin/zsh ubuntu
+            - curl -L https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz | tar -C /usr/local -zxv
+            - git clone --depth 1 https://github.com/junegunn/fzf.git /home/ubuntu/.fzf
+            - ./home/ubuntu/.fzf/install --key-bindings --completion --update-rc
+            - git clone https://github.com/pkazmierczak/configs.git /home/ubuntu/configs
+            - curl -fLo /home/ubuntu/.config/nvim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+            - ln -s /home/ubuntu/configs/.vim/init.vim /home/ubuntu/.config/nvim/init.vim
+            - echo "some ssh key" >> /home/ubuntu/.ssh/authorized_keys
+            - chown -R ubuntu:ubuntu /home/ubuntu
             - LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 mosh-server
-            - usermod -a -G docker ubuntu
+
   EIPAssociation:
     Type: "AWS::EC2::EIPAssociation"
     Properties:
@@ -86,51 +125,28 @@ Resources:
     Properties:
       GroupDescription: 'Enable access to the instance. '
       SecurityGroupIngress:
-      - CidrIp: 0.0.0.0/0
+      - CidrIp: !Sub '${IP}/32'
         FromPort: '60000'
         IpProtocol: udp
         ToPort: '61000'
+      - CidrIp: !Sub '${IP}/32'
+        FromPort: '22'
+        IpProtocol: tcp
+        ToPort: '22'
+      - CidrIp: !Sub '${IP}/32'
+        FromPort: '8888'
+        IpProtocol: tcp
+        ToPort: '8888'
       Tags:
       - Key: Name
         Value: !Join [ "-", [SG, !Ref "AWS::StackName"] ]
     Type: AWS::EC2::SecurityGroup
-  RootRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ec2.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Path: "/"
-  RolePolicies:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: root
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Action: "ecr:*"
-          Resource: "*"
-      Roles:
-      - !Ref RootRole
-  RootInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: "/"
-      Roles:
-      - !Ref RootRole
   MyDNS:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneName: !Ref HostedZone
       Comment: CNAME for the server
       Name: !Join [ ".", [!Ref "AWS::StackName", !Ref HostedZone] ]
-      Type: CNAME
+      Type: A
       TTL: 300
-      ResourceRecords: [ !GetAtt Instance.PublicDnsName ]
+      ResourceRecords: [ !Ref EIP ]
